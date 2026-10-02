@@ -2,20 +2,27 @@ const express = require('express');
 
 const app = express();
 
-app.use(express.json()); // Parse JSON bodies
+app.use(express.json());
 
 let todos = [
-    { id: 1, task: 'Learn Node.js', completed: false },
-    { id: 2, task: 'Build CRUD API', completed: false },
+    {
+        id: 1,
+        task: 'Learn Node.js',
+        completed: false
+    },
+    {
+        id: 2,
+        task: 'Build CRUD API',
+        completed: false
+    }
 ];
 
-// GET All – Read
+// GET ALL TODOS
 app.get('/todos', (req, res) => {
     res.status(200).json(todos);
 });
 
-
-// GET Single Todo – Read
+// GET ONE TODO
 app.get('/todos/:id', (req, res) => {
     const id = parseInt(req.params.id);
 
@@ -30,19 +37,16 @@ app.get('/todos/:id', (req, res) => {
     res.status(200).json(todo);
 });
 
-
-// GET Active Todos – Bonus
+// GET ACTIVE TODOS
 app.get('/todos/active', (req, res) => {
     const activeTodos = todos.filter((t) => !t.completed);
 
     res.status(200).json(activeTodos);
 });
 
-
-// POST New – Create
+// CREATE A TODO
 app.post('/todos', (req, res) => {
 
-    // Validation: task is required
     if (!req.body.task) {
         return res.status(400).json({
             error: 'Task field is required'
@@ -51,7 +55,8 @@ app.post('/todos', (req, res) => {
 
     const newTodo = {
         id: todos.length + 1,
-        ...req.body
+        task: req.body.task,
+        completed: req.body.completed || false
     };
 
     todos.push(newTodo);
@@ -59,13 +64,11 @@ app.post('/todos', (req, res) => {
     res.status(201).json(newTodo);
 });
 
-
-// PATCH Update – Partial
+// UPDATE A TODO
 app.patch('/todos/:id', (req, res) => {
+    const id = parseInt(req.params.id);
 
-    const todo = todos.find(
-        (t) => t.id === parseInt(req.params.id)
-    );
+    const todo = todos.find((t) => t.id === id);
 
     if (!todo) {
         return res.status(404).json({
@@ -78,10 +81,8 @@ app.patch('/todos/:id', (req, res) => {
     res.status(200).json(todo);
 });
 
-
-// DELETE Remove
+// DELETE A TODO
 app.delete('/todos/:id', (req, res) => {
-
     const id = parseInt(req.params.id);
 
     const initialLength = todos.length;
@@ -90,33 +91,32 @@ app.delete('/todos/:id', (req, res) => {
 
     if (todos.length === initialLength) {
         return res.status(404).json({
-            error: 'Not found'
+            error: 'Todo not found'
         });
     }
 
     res.status(204).send();
 });
 
-
-// GET Completed Todos
+// GET COMPLETED TODOS
 app.get('/todos/completed', (req, res) => {
+    const completedTodos = todos.filter((t) => t.completed);
 
-    const completed = todos.filter((t) => t.completed);
-
-    res.json(completed);
+    res.status(200).json(completedTodos);
 });
 
-
-// Error Handler
+// ERROR HANDLER
 app.use((err, req, res, next) => {
+    console.error(err);
+
     res.status(500).json({
         error: 'Server error!'
     });
 });
 
+// PORT
+const PORT = process.env.PORT || 3002;
 
-const PORT = 3002;
-
-app.listen(PORT, () => {
-    console.log(`Server on port ${PORT}`);
+app.listen(PORT, '0.0.0.0', () => {
+    console.log(`Server running on port ${PORT}`);
 });
